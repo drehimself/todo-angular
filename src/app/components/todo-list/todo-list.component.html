@@ -2,7 +2,18 @@
 
 <input type="text" class="todo-input" placeholder="What needs to be done" [(ngModel)]="todoTitle" (keyup.enter)="addTodo()">
 
-<div class="todo-item" *ngFor="let todo of todosFiltered()" @fade>
+<todo-item
+  *ngFor="let todo of todosFiltered()"
+  [todo]="todo"
+  (checkedItem)="doneEdit($event)"
+  (doubleClickedItem)="editTodo($event)"
+  (blurredItem)="doneEdit($event)"
+  (enteredItem)="doneEdit($event)"
+  (cancelledItem)="cancelEdit($event)"
+  (deletedItem)="deleteTodo($event)"
+></todo-item>
+
+<!-- <div class="todo-item" *ngFor="let todo of todosFiltered()" @fade>
   <div class="todo-item-left">
     <input type="checkbox" [(ngModel)]="todo.completed" (change)="doneEdit(todo)">
     <div *ngIf="!todo.editing; else editingTodo" class="todo-item-label" [ngClass]="{ 'completed' : todo.completed }" (dblclick)="editTodo(todo)">{{ todo.title }}</div>
@@ -13,7 +24,7 @@
   <div class="remove-item" (click)="deleteTodo(todo.id)">
     &times;
   </div>
-</div>
+</div> -->
 
 <div class="extra-container">
   <div><label><input type="checkbox" (change)="checkAllTodos()"  [(ngModel)]="!anyRemainingModel"> Check All</label></div>
