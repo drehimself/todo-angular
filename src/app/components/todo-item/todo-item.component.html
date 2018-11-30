@@ -1,14 +1,14 @@
 <div class="todo-item">
   <div class="todo-item-left">
-    <input type="checkbox" [(ngModel)]="todo.completed" (change)="doneEdit(todo)">
+    <input type="checkbox" [(ngModel)]="todo.completed" (change)="todoService.doneEdit(todo)">
     <div *ngIf="!todo.editing; else editingTodo" class="todo-item-label" [ngClass]="{ 'completed' : todo.completed }"
-      (dblclick)="editTodo(todo)">{{ todo.title }}</div>
+      (dblclick)="todoService.editTodo(todo)">{{ todo.title }}</div>
     <ng-template #editingTodo>
-      <input type="text" class="todo-item-edit" [(ngModel)]="todo.title" (blur)="doneEdit(todo)" (keyup.enter)="doneEdit(todo)"
-        (keyup.esc)="cancelEdit(todo)" autofocus>
+      <input type="text" class="todo-item-edit" [(ngModel)]="todo.title" (blur)="todoService.doneEdit(todo)" (keyup.enter)="todoService.doneEdit(todo)"
+        (keyup.esc)="todoService.cancelEdit(todo)" autofocus>
     </ng-template>
   </div>
-  <div class="remove-item" (click)="deleteTodo(todo.id)">
+  <div class="remove-item" (click)="todoService.deleteTodo(todo.id)">
     &times;
   </div>
 </div>
