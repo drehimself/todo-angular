@@ -1,5 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Todo } from '../interfaces/todo';
+import { environment } from 'src/environments/environment';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+import { throwError as observableThrowError } from 'rxjs';
+
+const API_URL = environment.apiUrl;
 
 @Injectable({
   providedIn: 'root'
@@ -10,40 +16,43 @@ export class TodoService {
   beforeEditCache: string = '';
   filter: string = 'all';
   anyRemainingModel: boolean = true;
-  todos: Todo[] = [
-    {
-      'id': 1,
-      'title': 'Finish Angular Screencast',
-      'completed': false,
-      'editing': false,
-    },
-    {
-      'id': 2,
-      'title': 'Take over world',
-      'completed': false,
-      'editing': false,
-    },
-    {
-      'id': 3,
-      'title': 'One more thing',
-      'completed': false,
-      'editing': false,
-    },
-  ];
+  todos: Todo[] = [];
 
-  constructor() { }
+  constructor(private http: HttpClient) {
+    this.todos = this.getTodos();
+  }
+
+  getTodos(): Todo[] {
+    this.http.get(API_URL + '/todos')
+      .pipe(catchError(this.errorHandler))
+      .subscribe((response: any) => {
+        this.todos = response;
+      })
+
+      return this.todos;
+  }
+
+  errorHandler(error: HttpErrorResponse) {
+    return observableThrowError(error.message || 'Something went wrong!!!!');
+  }
 
   addTodo(todoTitle: string): void {
     if (todoTitle.trim().length === 0) {
       return;
     }
 
-    this.todos.push({
-      id: this.idForTodo,
+    this.http.post(API_URL + '/todos/', {
       title: todoTitle,
-      completed: false,
-      editing: false
+      completed: false
     })
+      .subscribe((response: any) => {
+        this.todos.push({
+          id: response.id,
+          title: todoTitle,
+          completed: false,
+          editing: false
+        });
+      });
 
     this.idForTodo++;
   }
@@ -60,6 +69,14 @@ export class TodoService {
 
     this.anyRemainingModel = this.anyRemaining();
     todo.editing = false;
+
+    this.http.patch(API_URL + '/todos/' + todo.id, {
+      title: todo.title,
+      completed: todo.completed
+    })
+      .subscribe((response: any) => {
+
+      })
   }
 
   cancelEdit(todo: Todo): void {
@@ -68,7 +85,11 @@ export class TodoService {
   }
 
   deleteTodo(id: number): void {
-    this.todos = this.todos.filter(todo => todo.id !== id);
+
+    this.http.delete(API_URL + '/todos/' + id)
+    .subscribe((response: any) => {
+        this.todos = this.todos.filter(todo => todo.id !== id);
+      })
   }
 
   remaining(): number {
@@ -80,12 +101,29 @@ export class TodoService {
   }
 
   clearCompleted(): void {
-    this.todos = this.todos.filter(todo => !todo.completed);
+    const completed = this.todos
+      .filter(todo => todo.completed)
+      .map(todo => todo.id)
+
+    this.http.request('delete', API_URL + '/todosDeleteCompleted', {
+      body: {
+        todos: completed
+      }
+    }).subscribe((response: any) => {
+      this.todos = this.todos.filter(todo => !todo.completed);
+    })
   }
 
   checkAllTodos(): void {
-    this.todos.forEach(todo => todo.completed = (<HTMLInputElement>event.target).checked)
-    this.anyRemainingModel = this.anyRemaining();
+    const checkedTodo = (<HTMLInputElement>event.target).checked;
+
+    this.http.patch(API_URL + '/todosCheckAll', {
+      completed: checkedTodo
+    })
+      .subscribe((response: any) => {
+        this.todos.forEach(todo => todo.completed = checkedTodo)
+        this.anyRemainingModel = this.anyRemaining();
+      })
   }
 
   anyRemaining(): boolean {
